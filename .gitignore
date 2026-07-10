@@ -1,0 +1,10 @@
+# Verilator build artifacts
+obj_dir/
+*.vcd
+*.fst
+
+# Editor/OS junk
+.vscode/
+*.swp
+.DS_Store
+verilator/
