@@ -42,13 +42,13 @@ module tb_pattern_detector;
 
     always_comb begin
         case(ref_state)
-            IDLE   : ref_next = in ? S1     : IDLE;
-            S1     : ref_next = in ? S11    : IDLE;
-            S11    : ref_next = in ? S11    : S110;
-            S110   : ref_next = in ? S1101  : IDLE;
-            S1101  : ref_next = in ? S11    : S11010;
-            S11010 : ref_next = in ? S110101: IDLE;
-            S110101: ref_next = in ? S11    : IDLE;
+            IDLE   : ref_next = state_t'(in ? S1     : IDLE);
+            S1     : ref_next = state_t'(in ? S11    : IDLE);
+            S11    : ref_next = state_t'(in ? S11    : S110);
+            S110   : ref_next = state_t'(in ? S1101  : IDLE);
+            S1101  : ref_next = state_t'(in ? S11    : S11010);
+            S11010 : ref_next = state_t'(in ? S110101: IDLE);
+            S110101: ref_next = state_t'(in ? S11    : IDLE);
             default: ref_next = IDLE;
         endcase
     end
@@ -152,8 +152,8 @@ module tb_pattern_detector;
     // Waveform dump
     //--------------------------------------------------------------
     initial begin
-        $dumpfile("tb_fsm_design.vcd");
-        $dumpvars(0, tb_fsm_design);
+        $dumpfile("tb_pattern_detector.vcd");
+        $dumpvars(0, tb_pattern_detector);
     end
 
 endmodule

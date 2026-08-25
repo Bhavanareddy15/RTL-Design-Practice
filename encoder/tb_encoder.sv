@@ -9,6 +9,12 @@ module tb_encoder;
 
     int errors = 0;
 
+    // Waveform dump
+    initial begin
+        $dumpfile("tb_encoder.vcd");
+        $dumpvars(0, tb_encoder);
+    end
+
     // DUT instantiation
     encoder #(.INPUT_WIDTH(INPUT_WIDTH)) dut (
         .inp(inp),

@@ -97,11 +97,11 @@ module fsm_tb;
         $finish;
     end
 
-    property p_legal_out;
-        @(posedge clk) disable iff (!areset) (out === 1'b0 || out === 1'b1);
-    endproperty
-    assert property (p_legal_out)
-        else $error("out took an illegal value");
+    always @(posedge clk) begin
+        if (areset)
+            assert (out === 1'b0 || out === 1'b1)
+                else $error("out took an illegal value");
+    end
 
     initial begin
         $dumpfile("fsm_tb.vcd");
