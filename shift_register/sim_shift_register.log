@@ -1,0 +1,15 @@
+VCD info: dumpfile tb_shift_register.vcd opened for output.
+Starting shift_register testbench...
+PASS [after reset]: parallel_out=00000000 serial_out=0
+PASS [after parallel load]: parallel_out=10101101 serial_out=1
+PASS [after 1 left shift, serial_in=1]: parallel_out=01011011 serial_out=0
+PASS [after 2nd left shift, serial_in=0]: parallel_out=10110110 serial_out=1
+PASS [after reload for right shift test]: parallel_out=00011110 serial_out=0
+PASS [after 1 right shift, serial_in=1]: parallel_out=10001111 serial_out=1
+PASS [hold, shift_en=0]: parallel_out=10001111 serial_out=1
+PASS [load+shift simultaneously, dir=left]: parallel_out=10000111 serial_out=1
+PASS [load+shift simultaneously, dir=right]: parallel_out=01100001 serial_out=1
+PASS [load only, serial_in toggles, shift_en deasserted]: parallel_out=01101001 serial_out=0
+PASS [after mid-operation reset]: parallel_out=00000000 serial_out=0
+ALL TESTS PASSED
+tb_shift_register.sv:171: $finish called at 137 (1s)

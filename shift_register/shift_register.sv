@@ -20,6 +20,14 @@ module shift_register #(
         if(!rst_n) begin
             shift_reg<=0;
         end
+        else if(load & shift_en) begin
+            // load + shift together: shift the incoming parallel_in by one bit
+            // (rather than the current shift_reg) and store that
+            if(!dir)
+                shift_reg <= {parallel_in[WIDTH-2:0], serial_in};
+            else
+                shift_reg <= {serial_in, parallel_in[WIDTH-1:1]};
+        end
         else if(load) begin
             shift_reg<= parallel_in;
 
