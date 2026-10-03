@@ -1,0 +1,24 @@
+
+3. Printing statistics.
+
+=== fsm_design_onehot ===
+
+        +----------Local Count, excluding submodules.
+        | 
+        6 wires
+        8 wire bits
+        6 public wires
+        8 public wire bits
+        4 ports
+        4 port bits
+        4 cells
+        1   $_DFF_PN0_
+        1   $_DFF_PN1_
+        2   $_MUX_
+
+4. Executing LTP pass (find longest path).
+
+Longest topological path in fsm_design_onehot (length=1):
+    0: \state [1]
+    1: \next_state [1] (via $abc$101$auto$blifparse.cc:397:parse_blif$103)
+   ff: \state [1] (via $auto$ff.cc:266:slice$100)

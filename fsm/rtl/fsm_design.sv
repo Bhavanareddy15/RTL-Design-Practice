@@ -6,7 +6,10 @@ module fsm_design(
     input logic in,
     output logic out);
 
-    typedef enum {A, B} state_t;
+    // v1: binary encoding (1 flop). The explicit `logic` base type matters:
+    // a bare `enum` is a 32-bit int, which leaves the case incomplete and
+    // makes Yosys infer a latch on next_state.
+    typedef enum logic {A, B} state_t;
 
     state_t state, next_state;
 

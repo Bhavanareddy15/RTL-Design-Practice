@@ -8,3 +8,6 @@ obj_dir/
 *.swp
 .DS_Store
 verilator/
+
+# Generated build outputs (sim binaries, logs, netlists)
+build/

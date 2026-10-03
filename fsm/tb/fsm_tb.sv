@@ -1,5 +1,10 @@
 `timescale 1ns/1ps
 
+// Select the design variant at compile time, e.g. -DDUT=fsm_design_onehot
+`ifndef DUT
+`define DUT fsm_design
+`endif
+
 module fsm_tb;
 
     logic clk;
@@ -7,7 +12,7 @@ module fsm_tb;
     logic in;
     logic out;
 
-    fsm_design dut (
+    `DUT dut (
         .clk      (clk),
         .areset_n (areset),
         .in       (in),
@@ -104,7 +109,9 @@ module fsm_tb;
     end
 
     initial begin
-        $dumpfile("fsm_tb.vcd");
+        string vcd;
+        if (!$value$plusargs("vcd=%s", vcd)) vcd = "fsm_tb.vcd";
+        $dumpfile(vcd);
         $dumpvars(0, fsm_tb);
     end
 

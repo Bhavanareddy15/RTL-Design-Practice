@@ -1,0 +1,23 @@
+
+3. Printing statistics.
+
+=== fsm_design ===
+
+        +----------Local Count, excluding submodules.
+        | 
+        6 wires
+        6 wire bits
+        6 public wires
+        6 public wire bits
+        4 ports
+        4 port bits
+        2 cells
+        1   $_DFF_PN1_
+        1   $_XNOR_
+
+4. Executing LTP pass (find longest path).
+
+Longest topological path in fsm_design (length=1):
+    0: \state
+    1: \next_state (via $abc$103$auto$blifparse.cc:397:parse_blif$104)
+   ff: \state (via $auto$ff.cc:266:slice$102)
