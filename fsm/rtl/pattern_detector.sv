@@ -8,7 +8,10 @@ module pattern_detector(
     output logic out);
 
 
-    typedef enum {IDLE, S1, S11, S110, S1101, S11010, S110101} state_t;
+    // v1: binary encoding (3 flops). Explicit `logic [2:0]` base type: a bare
+    // `enum` is a 32-bit int, which leaves the case incomplete and makes
+    // Yosys infer a latch on next_state.
+    typedef enum logic [2:0] {IDLE, S1, S11, S110, S1101, S11010, S110101} state_t;
 
     state_t state , next_state;
 
@@ -35,6 +38,7 @@ module pattern_detector(
             else next_state = IDLE;
         S110101: if(in) next_state= S11;
             else next_state = IDLE;
+        default: next_state = IDLE;   // unused code 3'b111 -> recover to IDLE
         endcase
 
     end

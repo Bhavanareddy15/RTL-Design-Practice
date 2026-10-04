@@ -29,7 +29,7 @@ save **area** and **power**.
 |--------|-----------|-----|-------|--------|-------|
 | Encoder | [encoder/](encoder/) | ✅ | ⬜ | ⬜ | |
 | FSM (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | equiv check; one-hot costs 2× cells — see [NOTES](fsm/NOTES.md) |
-| Pattern detector | [fsm/pattern_detector/](fsm/pattern_detector/) | ✅ | ⬜ | ⬜ | |
+| Pattern detector (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | one-hot wins: 21 vs 36 cells, depth 5 vs 7 — see [NOTES](fsm/NOTES.md) |
 | Shift register | [shift_register/](shift_register/) | ✅ | ⬜ | ⬜ | |
 | Prepend packet | [prepend_packet/](prepend_packet/) | ✅ | ✅ | ⬜ | |
 | Fixed-priority arbiter | [arbiters/](arbiters/) | ✅ | ⬜ | ⬜ | |

@@ -1,0 +1,31 @@
+
+3. Printing statistics.
+
+=== pattern_detector_onehot ===
+
+        +----------Local Count, excluding submodules.
+        | 
+       13 wires
+       25 wire bits
+        6 public wires
+       18 public wire bits
+        4 ports
+        4 port bits
+       21 cells
+        5   $_ANDNOT_
+        3   $_AND_
+        6   $_DFF_PN0_
+        1   $_DFF_PN1_
+        1   $_NOR_
+        5   $_OR_
+
+4. Executing LTP pass (find longest path).
+
+Longest topological path in pattern_detector_onehot (length=5):
+    0: \state [1]
+    1: $abc$123$new_n16 (via $abc$123$auto$blifparse.cc:397:parse_blif$124)
+    2: $abc$123$new_n17 (via $abc$123$auto$blifparse.cc:397:parse_blif$125)
+    3: $abc$123$new_n18 (via $abc$123$auto$blifparse.cc:397:parse_blif$126)
+    4: $abc$123$new_n19 (via $abc$123$auto$blifparse.cc:397:parse_blif$127)
+    5: \next_state [0] (via $abc$123$auto$blifparse.cc:397:parse_blif$128)
+   ff: \state [0] (via $auto$ff.cc:266:slice$116)
