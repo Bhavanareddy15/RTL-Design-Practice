@@ -15,15 +15,17 @@ to see when one-hot encoding pays off.
 | `tb/tb_pattern_detector.sv` | self-checking TB for the pattern detector |
 | `synth/stat_*.txt` | committed Yosys `stat` + logic depth per variant |
 | `synth/toggles_*.txt` | committed per-signal toggle counts (RTL + gate-level) |
+| `synth/area_*.txt`, `synth/timing_*.txt` | committed sky130 area and OpenSTA timing/power reports |
 | `docs/` | state diagrams |
 | `build/` | generated: sim binaries, VCDs, netlists, logs, `.dot` schematics (gitignored) |
 
 Each TB picks its DUT with `-DDUT=<module>`, so both variants run the same tests.
-Run `make` for sim + synth + compare, `make equiv` for formal equivalence, and
-`make toggles` for switching activity. Single targets work too, e.g.
+Run `make` for sim + synth + compare, `make equiv` for formal equivalence,
+`make toggles` for switching activity, and `make timing` for real sky130 area,
+timing and power. Single targets work too, e.g.
 `make sim-pattern_detector_onehot`.
 
-All results: Yosys 0.58 generic `synth`, Icarus 12.
+Results: Yosys 0.58, Icarus 12; sky130 HD typical corner and OpenSTA 2.3.1 for section 4.
 
 ---
 
@@ -86,9 +88,9 @@ All results: Yosys 0.58 generic `synth`, Icarus 12.
 - **Transitions are sparse.** Each state has only 1–5 predecessors, so each
   one-hot equation stays tiny. The worst ones are `IDLE` (5 predecessors) and
   `S11` (4), which set the logic depth.
-- **Area is still a trade.** v2 has 4 more flops; on real silicon a flop is
-  several times the area of a simple gate, so the generic cell count
-  overstates v2's win. Needs a liberty-mapped comparison (see next experiments).
+- **Generic cell count misleads on area.** v2 has 4 more flops, and on real
+  silicon a flop is several times the area of a simple gate. Mapped to sky130,
+  v2 is actually **56% larger** — see section 4.
 - **Yosys did not re-encode v1** ("circuit seems to be self-resetting"), so v1 is
   the plain binary encoding.
 - **Unused states.** v1 has one unused code (`3'b111`), handled with
@@ -139,12 +141,102 @@ its data doesn't).
   binary's 33-gate decode/encode logic churns on every cycle, and **one-hot
   switches half as much (1568 vs 3086)**. **Measure power at gate level, not RTL.**
 - **…but one-hot pays on the clock.** 7 flops vs. 3 means 2.3× the clock-pin
-  toggles. Data toggles favor one-hot by 2×, clock load favors binary by 2.3×,
-  and which one wins overall depends on capacitance per net vs. per clock pin —
-  which needs a real cell library (see next experiments).
+  toggles. Data toggles favor one-hot by 2×, clock load favors binary by 2.3×.
+  With real sky130 power numbers the clock wins: one-hot uses 88% more power
+  (section 4).
 - **Lower bound.** The gate-level sim is zero-delay, so it has no glitches.
   With real gate delays, binary's deeper logic (depth 7 vs. 5) would glitch
   more, widening one-hot's lead on data toggles.
+
+---
+
+## 4. Real area, timing and power (sky130)
+
+### How it's done
+
+`make timing` (needs WSL + OpenSTA, see [Setup](#setup-for-make-timing)):
+
+1. **Map to real cells.** Yosys `dfflibmap` + `abc -liberty` map each variant
+   onto the SkyWater sky130 HD standard cells (typical corner, 25 °C, 1.8 V)
+   and write a cell-level netlist. `stat -liberty` gives area in µm².
+   Low-power `lpflow_*` cells are excluded (`dont_use`), as in real flows.
+2. **Static timing analysis.** OpenSTA ([`scripts/sta.tcl`](../scripts/sta.tcl))
+   times every flop-to-flop path using the library's delay tables: clk→Q of the
+   launching flop + logic + setup of the capturing flop. Inputs driven by a
+   `buf_1`, 5 fF output load, ideal clock, no wires (pre-placement). The async
+   reset is a false path.
+3. **Power** at a 10 ns clock (100 MHz). The **measured** activity of `in` from
+   the RTL sim (0.51 toggles/cycle) is fed to OpenSTA, which propagates it
+   through the logic and flops. Reported twice: with that activity, and with
+   all data held still (**clock only**: the clock toggling the flops'
+   internal clock circuitry, paid every cycle regardless of data).
+
+Reports: `synth/area_*.txt`, `synth/timing_*.txt`.
+
+### Results
+
+| | Area (µm²) | Flop area | Min period (ns) | fmax (MHz) | Power (µW) | Clock-only (µW) | Data-dependent (µW) |
+|---|---|---|---|---|---|---|---|
+| `fsm_design` (binary) | **35.0** | 75% | **0.71** | **1399** | **7.8** | 4.1 | 3.7 |
+| `fsm_design_onehot` | 73.8 | 70% | 0.76 | 1319 | 14.1 | 8.2 | 5.9 |
+| `pattern_detector` (binary) | **148.9** | 50% | 1.01 | 990 | **22.4** | 12.4 | 10.0 |
+| `pattern_detector_onehot` | 232.7 | 76% | **0.92** | **1084** | 42.0 | 28.8 | 13.2 |
+
+Critical paths (setup):
+
+- `pattern_detector`: clk→Q 0.405 → `nor4b` 0.387 → `a31o` 0.141 → setup 0.067 = **1.01 ns**
+- `pattern_detector_onehot`: clk→Q 0.373 → `o41a` 0.412 → setup 0.130 = **0.92 ns**
+
+### Observations
+
+- **Pattern detector: one-hot is 9% faster, but 56% larger and uses 88% more
+  power.** The generic-gate results (section 2: one-hot 42% *smaller*) were
+  wrong on area, because they count a flop like any other gate. A sky130 flop
+  (`dfrtp_1`, 25 µm²) is the size of 4–7 simple gates, and flops are 76% of
+  one-hot's area.
+- **The clock dominates power.** Clock-only power is 55% of binary's total
+  and 69% of one-hot's. It scales with the flop count (~4 µW per flop at
+  100 MHz), so one-hot's 4 extra flops cost 16 µW before any data moves. That
+  settles the section 3 question: one-hot's lower gate switching doesn't come
+  close to paying for its extra clock load.
+- **The flop is a big part of the critical path.** clk→Q alone is ~0.4 ns,
+  40% of binary's path. Generic logic depth (7 vs. 5) ignores it, and
+  overstates one-hot's speed advantage (real: 9%).
+- **Real cells flatten logic depth.** Generic depth 7 vs. 5 becomes 2 cells vs.
+  1 cell: one-hot's whole 5-input `IDLE` equation is a single `o41a`
+  (4-input OR into an AND) cell.
+- **Two-state FSM: binary wins everything** — half the area, faster, 45% less
+  power. Its flop is a `dfstp_2` (set type), because it resets to state B = 1.
+- **Async reset needs a synchronizer.** Without the false path, STA reports a
+  removal violation (−0.24 ns): releasing reset right at the clock edge, as
+  input delay 0 implies, is too close to the edge. Real designs release reset
+  through a reset synchronizer.
+
+### Caveats
+
+- **Power is vectorless beyond the inputs.** OpenSTA 2.3 can't read a VCD, and
+  ignores activity set on flop outputs, so internal activity is estimated by
+  propagating `in`'s probability through the logic. That assumes signals are
+  independent, which one-hot states are not (exactly one bit is 1), so the
+  combinational part is approximate (binary 6.1 µW vs. one-hot 5.8 µW, where
+  gate-level toggles suggest a bigger gap). The clock-only part doesn't depend
+  on activity and is the reliable number.
+- **Pre-layout.** No wire capacitance and an ideal clock (no clock tree
+  buffers, which would add more clock power per flop).
+- **Typical corner only.** Sign-off would also check slow (`ss`) and fast
+  (`ff`) corners.
+
+### Setup for `make timing`
+
+- The liberty file is downloaded to `lib/` on first use (gitignored, 12.8 MB).
+- OpenSTA comes with OpenROAD from the litex-hub conda channel, installed in
+  WSL Ubuntu with [micromamba](https://mamba.readthedocs.io) (no sudo):
+  ```sh
+  curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xj -C ~/.local bin/micromamba
+  MAMBA_ROOT_PREFIX=~/micromamba ~/.local/bin/micromamba create -n eda -c litex-hub -c conda-forge openroad
+  ```
+  [`scripts/sta.sh`](../scripts/sta.sh) runs `~/micromamba/envs/eda/bin/sta`
+  (OpenSTA 2.3.1); override with `STA_BIN=...`.
 
 ---
 
@@ -167,11 +259,12 @@ its data doesn't).
 
 ## Next experiments
 
-- [ ] Turn toggles into µW: sky130 liberty + OpenSTA `read_vcd` / `report_power`,
-      to settle data-toggle vs. clock-load for the pattern detector.
-- [ ] Map to a real liberty file (e.g. sky130) with `dfflibmap` + `abc -liberty`
-      to compare area in µm² instead of generic cell count — especially for the
-      pattern detector, where v2 trades 4 extra flops for fewer gates.
+- [x] Map to sky130 and compare area in µm², timing and power — see section 4.
+- [ ] Power from a full VCD: simulate the sky130 netlist and use a newer OpenSTA
+      (`read_vcd`) so internal activity is measured, not estimated.
+- [ ] Clock gating / enable flops: the clock is most of the power, so try
+      holding state with an enable when `in` doesn't change it.
+- [ ] Check slow and fast corners (`ss_100C_1v60`, `ff_n40C_1v95`).
 - [ ] Try Yosys `(* fsm_encoding = "one-hot" *)` on the enum and compare with the hand-coded v2.
 - [ ] One-hot with an all-zeros `IDLE` ("one-hot-zero"): saves a flop in the pattern detector.
 - [ ] Add illegal-state recovery to the one-hot variants and measure the cost.

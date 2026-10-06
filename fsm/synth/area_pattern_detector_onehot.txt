@@ -1,0 +1,27 @@
+
+6. Printing statistics.
+
+=== pattern_detector_onehot ===
+
+        +----------Local Count, excluding submodules.
+        |        +-Local Area, excluding submodules.
+        |        | 
+        8        - wires
+       20        - wire bits
+        6        - public wires
+       18        - public wire bits
+        4        - ports
+        4        - port bits
+       16  232.723 cells
+        1    5.005   sky130_fd_sc_hd__a21oi_1
+        3   18.768   sky130_fd_sc_hd__and2_0
+        6  150.144   sky130_fd_sc_hd__dfrtp_1
+        1   26.275   sky130_fd_sc_hd__dfstp_2
+        1    3.754   sky130_fd_sc_hd__nor2_1
+        2   12.512   sky130_fd_sc_hd__nor2b_1
+        1    5.005   sky130_fd_sc_hd__nor3_1
+        1   11.261   sky130_fd_sc_hd__o41a_1
+
+   Chip area for module '\pattern_detector_onehot': 232.723200
+     of which used for sequential elements: 176.419200 (75.81%)
+

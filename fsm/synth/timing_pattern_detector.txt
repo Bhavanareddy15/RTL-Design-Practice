@@ -1,0 +1,94 @@
+
+=================== critical path (setup) ===================
+Startpoint: _17_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: _18_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+     Cap     Slew    Delay     Time   Description
+---------------------------------------------------------------------------
+            0.000    0.000    0.000   clock clk (rise edge)
+                     0.000    0.000   clock network delay (ideal)
+            0.000    0.000    0.000 ^ _17_/CLK (sky130_fd_sc_hd__dfrtp_1)
+   0.018    0.106    0.405    0.405 v _17_/Q (sky130_fd_sc_hd__dfrtp_1)
+            0.106    0.003    0.408 v _07_/A (sky130_fd_sc_hd__nor4b_1)
+   0.006    0.339    0.387    0.795 ^ _07_/Y (sky130_fd_sc_hd__nor4b_1)
+            0.339    0.003    0.798 ^ _15_/B1 (sky130_fd_sc_hd__a31o_1)
+   0.002    0.047    0.141    0.939 ^ _15_/X (sky130_fd_sc_hd__a31o_1)
+            0.047    0.004    0.943 ^ _18_/D (sky130_fd_sc_hd__dfrtp_1)
+                              0.943   data arrival time
+
+            0.000   10.000   10.000   clock clk (rise edge)
+                     0.000   10.000   clock network delay (ideal)
+                     0.000   10.000   clock reconvergence pessimism
+                             10.000 ^ _18_/CLK (sky130_fd_sc_hd__dfrtp_1)
+                    -0.067    9.933   library setup time
+                              9.933   data required time
+---------------------------------------------------------------------------
+                              9.933   data required time
+                             -0.943   data arrival time
+---------------------------------------------------------------------------
+                              8.990   slack (MET)
+
+
+
+=================== hold check ===================
+Startpoint: in (input port clocked by clk)
+Endpoint: _17_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: min
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 v input external delay
+   0.054    0.054 v in (in)
+   0.079    0.133 ^ _12_/Y (sky130_fd_sc_hd__o21ai_0)
+   0.068    0.201 v _13_/Y (sky130_fd_sc_hd__a22oi_1)
+   0.004    0.205 v _17_/D (sky130_fd_sc_hd__dfrtp_1)
+            0.205   data arrival time
+
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000   clock reconvergence pessimism
+            0.000 ^ _17_/CLK (sky130_fd_sc_hd__dfrtp_1)
+  -0.057   -0.057   library hold time
+           -0.057   data required time
+-----------------------------------------------------------
+           -0.057   data required time
+           -0.205   data arrival time
+-----------------------------------------------------------
+            0.262   slack (MET)
+
+
+
+=================== timing summary ===================
+wns 0.000
+tns 0.000
+clk period_min = 1.01 fmax = 989.72
+
+=================== power: with switching activity ===================
+switching activity: measured, from build/act_pattern_detector.tcl
+Group                    Internal    Switching      Leakage        Total
+                            Power        Power        Power        Power
+------------------------------------------------------------------------
+Sequential           1.391909e-05 2.404110e-06 2.621760e-11 1.632323e-05  72.9%
+Combinational        4.075818e-06 1.988076e-06 3.263744e-11 6.063927e-06  27.1%
+Macro                0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+Pad                  0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+------------------------------------------------------------------------
+Total                1.799491e-05 4.392185e-06 5.885505e-11 2.238716e-05 100.0%
+                            80.4%        19.6%         0.0%
+
+=================== power: clock only ===================
+Group                    Internal    Switching      Leakage        Total
+                            Power        Power        Power        Power
+------------------------------------------------------------------------
+Sequential           1.237338e-05 0.000000e+00 2.621760e-11 1.237341e-05 100.0%
+Combinational        0.000000e+00 0.000000e+00 3.263744e-11 3.263744e-11   0.0%
+Macro                0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+Pad                  0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+------------------------------------------------------------------------
+Total                1.237338e-05 0.000000e+00 5.885505e-11 1.237344e-05 100.0%
+                           100.0%         0.0%         0.0%

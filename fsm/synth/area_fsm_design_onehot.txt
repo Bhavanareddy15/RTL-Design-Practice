@@ -1,0 +1,22 @@
+
+6. Printing statistics.
+
+=== fsm_design_onehot ===
+
+        +----------Local Count, excluding submodules.
+        |        +-Local Area, excluding submodules.
+        |        | 
+        6        - wires
+        8        - wire bits
+        6        - public wires
+        8        - public wire bits
+        4        - ports
+        4        - port bits
+        4   73.821 cells
+        1   25.024   sky130_fd_sc_hd__dfrtp_1
+        1   26.275   sky130_fd_sc_hd__dfstp_2
+        2   22.522   sky130_fd_sc_hd__mux2_1
+
+   Chip area for module '\fsm_design_onehot': 73.820800
+     of which used for sequential elements: 51.299200 (69.49%)
+

@@ -22,6 +22,8 @@ save **area** and **power**.
 | Waveforms      | GTKWave (`.vcd` / `.fst`)             |
 | Synthesis      | Yosys (generic `synth`, optionally `abc` with a liberty file); `yowasp-yosys` works if native Yosys isn't installed |
 | Formal         | SymbiYosys (`sby`) when needed        |
+| Cell library   | SkyWater sky130 HD (`lib/`, downloaded on first use) |
+| Timing / power | OpenSTA (from OpenROAD, via micromamba in WSL) — see [fsm/NOTES.md](fsm/NOTES.md#setup-for-make-timing) |
 
 ## Modules
 
@@ -29,7 +31,7 @@ save **area** and **power**.
 |--------|-----------|-----|-------|--------|-------|
 | Encoder | [encoder/](encoder/) | ✅ | ⬜ | ⬜ | |
 | FSM (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | equiv check; one-hot costs 2× cells — see [NOTES](fsm/NOTES.md) |
-| Pattern detector (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | one-hot wins: 21 vs 36 cells, depth 5 vs 7 — see [NOTES](fsm/NOTES.md) |
+| Pattern detector (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | sky130: one-hot 9% faster but 56% larger, 88% more power — see [NOTES](fsm/NOTES.md) |
 | Shift register | [shift_register/](shift_register/) | ✅ | ⬜ | ⬜ | |
 | Prepend packet | [prepend_packet/](prepend_packet/) | ✅ | ✅ | ⬜ | |
 | Fixed-priority arbiter | [arbiters/](arbiters/) | ✅ | ⬜ | ⬜ | |
