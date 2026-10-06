@@ -11,3 +11,6 @@ verilator/
 
 # Generated build outputs (sim binaries, logs, netlists)
 build/
+
+# Downloaded cell libraries (large; fetch instead of committing)
+lib/*.lib

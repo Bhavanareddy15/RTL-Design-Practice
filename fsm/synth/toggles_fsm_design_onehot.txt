@@ -1,0 +1,27 @@
+### RTL (build/fsm_design_onehot.vcd)
+signal                           bits  toggles
+clk                                 1      422
+next_state                          2      386
+state                               2      204
+in                                  1      103
+out                                 1      102
+areset_n                            1       21
+
+clock toggles      : 422  (211 cycles)
+input toggles      : 124
+internal nets      : 5 bits
+internal toggles   : 692
+
+### Gate-level (build/gls_fsm_design_onehot.vcd)
+signal                           bits  toggles
+clk                                 1      422
+next_state                          2      386
+state                               2      204
+in                                  1      103
+out                                 1      102
+areset_n                            1       21
+
+clock toggles      : 422  (211 cycles)
+input toggles      : 124
+internal nets      : 5 bits
+internal toggles   : 692

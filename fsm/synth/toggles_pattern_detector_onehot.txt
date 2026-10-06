@@ -1,0 +1,34 @@
+### RTL (build/pattern_detector_onehot.vcd)
+signal                           bits  toggles
+clk                                 1      539
+next_state                          7      496
+state                               7      376
+in                                  1      136
+out                                 1       18
+areset_n                            1        3
+
+clock toggles      : 539  (269 cycles)
+input toggles      : 139
+internal nets      : 15 bits
+internal toggles   : 890
+
+### Gate-level (build/gls_pattern_detector_onehot.vcd)
+signal                           bits  toggles
+clk                                 1      539
+next_state                          7      496
+state                               7      376
+_06_                                1      136
+in                                  1      136
+_05_                                1      134
+_04_                                1      112
+_02_                                1       92
+_03_                                1       90
+_01_                                1       74
+_00_                                1       40
+out                                 1       18
+areset_n                            1        3
+
+clock toggles      : 539  (269 cycles)
+input toggles      : 139
+internal nets      : 22 bits
+internal toggles   : 1568

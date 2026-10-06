@@ -62,3 +62,6 @@ sby -f <module>.sby
 - **Muxes and adders** – check whether resource sharing happened.
 - **Power proxies** – flop count, clock-enable/gating opportunities, toggle
   activity from simulation (VCD), and unnecessary resets on datapath registers.
+  [`scripts/vcd_toggles.py`](scripts/vcd_toggles.py) counts toggles per net; run
+  it on a **gate-level** VCD (TB against the Yosys netlist), since RTL VCDs miss
+  the internal logic — see [fsm/NOTES.md](fsm/NOTES.md) §3 for an example.

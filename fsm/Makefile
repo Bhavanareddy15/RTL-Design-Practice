@@ -3,6 +3,8 @@
 #   make synth     - synthesize every variant with Yosys, write stats + netlists
 #   make compare   - print a cell-count summary of all variants
 #   make equiv     - formally check each v1 == its one-hot v2 (Yosys miter + SAT)
+#   make gls       - gate-level sim: run each TB against its Yosys netlist
+#   make toggles   - count signal toggles (RTL + gate-level) as a power proxy
 #   make lint      - Verilator lint (needs verilator on PATH)
 #   make clean
 # Single targets also work, e.g. make sim-pattern_detector_onehot
@@ -20,12 +22,13 @@ tb_for = $(TB_$(patsubst %_onehot,%,$(1)))
 EQUIV_DEPTH := 25
 
 BUILD    := build
+TOGGLES  := python ../scripts/vcd_toggles.py
 
 # Use native yosys if installed, otherwise the YoWASP build (pip install yowasp-yosys).
 # Note: YoWASP can only see files under the current directory, so keep paths relative.
 YOSYS ?= $(shell command -v yosys 2>/dev/null || echo yowasp-yosys)
 
-.PHONY: all sim synth compare equiv lint clean
+.PHONY: all sim synth compare equiv gls toggles lint clean
 all: sim synth compare
 
 $(BUILD):
@@ -72,6 +75,27 @@ equiv-%: rtl/%.sv rtl/%_onehot.sv | $(BUILD)
 	  hierarchy -top miter; \
 	  sat -verify -seq $(EQUIV_DEPTH) -set-at 1 in_areset_n 0 -prove-asserts -show-inputs miter"
 	@echo "$*: equivalence check PASSED ($(EQUIV_DEPTH) cycles from reset)"
+
+# ---------------- gate-level sim + toggle counts ----------------
+# The netlist is plain Verilog over Yosys generic cells, so Icarus can run it
+# with the same TB. Zero-delay sim: no glitches, so toggles are a lower bound.
+gls: $(addprefix gls-,$(VARIANTS))
+
+gls-%: synth-% | $(BUILD)
+	iverilog -g2012 -DDUT=$* -o $(BUILD)/gls_$*.out $(call tb_for,$*) $(BUILD)/netlist_$*.v
+	vvp $(BUILD)/gls_$*.out +vcd=$(BUILD)/gls_$*.vcd > $(BUILD)/gls_$*.log
+	@tail -n 1 $(BUILD)/gls_$*.log
+	@grep -q "PASSED" $(BUILD)/gls_$*.log
+
+toggles: $(addprefix toggles-,$(VARIANTS))
+
+toggles-%: sim-% gls-%
+	@echo "### RTL ($(BUILD)/$*.vcd)" > synth/toggles_$*.txt
+	@$(TOGGLES) $(BUILD)/$*.vcd >> synth/toggles_$*.txt
+	@echo "" >> synth/toggles_$*.txt
+	@echo "### Gate-level ($(BUILD)/gls_$*.vcd)" >> synth/toggles_$*.txt
+	@$(TOGGLES) $(BUILD)/gls_$*.vcd >> synth/toggles_$*.txt
+	@echo "== $*"; grep -E "^###|internal toggles|cycles" synth/toggles_$*.txt
 
 # ---------------- lint ----------------
 lint:

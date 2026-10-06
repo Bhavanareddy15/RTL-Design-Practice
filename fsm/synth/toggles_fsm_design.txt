@@ -1,0 +1,27 @@
+### RTL (build/fsm_design.vcd)
+signal                           bits  toggles
+clk                                 1      422
+next_state                          1      193
+in                                  1      103
+out                                 1      102
+state                               1      102
+areset_n                            1       21
+
+clock toggles      : 422  (211 cycles)
+input toggles      : 124
+internal nets      : 3 bits
+internal toggles   : 397
+
+### Gate-level (build/gls_fsm_design.vcd)
+signal                           bits  toggles
+clk                                 1      422
+next_state                          1      193
+in                                  1      103
+out                                 1      102
+state                               1      102
+areset_n                            1       21
+
+clock toggles      : 422  (211 cycles)
+input toggles      : 124
+internal nets      : 3 bits
+internal toggles   : 397

@@ -14,12 +14,14 @@ to see when one-hot encoding pays off.
 | `tb/fsm_tb.sv` | self-checking TB for the two-state FSM |
 | `tb/tb_pattern_detector.sv` | self-checking TB for the pattern detector |
 | `synth/stat_*.txt` | committed Yosys `stat` + logic depth per variant |
+| `synth/toggles_*.txt` | committed per-signal toggle counts (RTL + gate-level) |
 | `docs/` | state diagrams |
 | `build/` | generated: sim binaries, VCDs, netlists, logs, `.dot` schematics (gitignored) |
 
 Each TB picks its DUT with `-DDUT=<module>`, so both variants run the same tests.
-Run `make` for sim + synth + compare, and `make equiv` for formal equivalence.
-Single targets work too, e.g. `make sim-pattern_detector_onehot`.
+Run `make` for sim + synth + compare, `make equiv` for formal equivalence, and
+`make toggles` for switching activity. Single targets work too, e.g.
+`make sim-pattern_detector_onehot`.
 
 All results: Yosys 0.58 generic `synth`, Icarus 12.
 
@@ -94,6 +96,58 @@ All results: Yosys 0.58 generic `synth`, Icarus 12.
 
 ---
 
+## 3. Switching activity (power proxy)
+
+### How it's measured
+
+Dynamic power ≈ α·C·V²·f. V and f are the same for both variants, so the
+comparison comes down to **how often each net switches (α)** and **how much
+capacitance switches (C)**. `make toggles` measures α:
+
+1. The TB dumps a VCD: every value change of every signal, with timestamps.
+2. `make gls` re-runs the **same TB against the Yosys netlist**, so the VCD also
+   contains every internal gate output (`_08_`, `_17_`, …), not just the
+   signals named in the RTL.
+3. [`scripts/vcd_toggles.py`](../scripts/vcd_toggles.py) counts per-bit 0↔1
+   transitions for every net in the `dut` scope (ignoring the initial value and
+   x/z), and separates clock, inputs and internal nets.
+4. Both variants get identical stimulus (same TB, same seed) — confirmed by
+   identical `in` and `clk` toggle counts.
+
+### Results
+
+Internal toggles = all DUT nets except `clk` and inputs. Clock-pin toggles =
+flops × clock toggles (each flop's clock pin switches every edge, even when
+its data doesn't).
+
+| | cycles | RTL internal | **Gate-level internal** | per cycle | flops | clock-pin toggles |
+|---|---|---|---|---|---|---|
+| `fsm_design` (binary) | 211 | 397 | **397** | 1.9 | 1 | 422 |
+| `fsm_design_onehot` | 211 | 692 | **692** | 3.3 | 2 | 844 |
+| `pattern_detector` (binary) | 269 | 674 | **3086** | 11.5 | 3 | 1617 |
+| `pattern_detector_onehot` | 269 | 890 | **1568** | 5.8 | 7 | 3773 |
+
+### Observations
+
+- **Two-state FSM: one-hot switches 1.7× more** on data nets and has 2× the
+  clock-pin load. Binary wins on every count. (RTL = gate-level here: the
+  netlist has no internal nets beyond `state`/`next_state`.)
+- **Pattern detector: RTL counts point the wrong way.** At RTL, one-hot looks
+  *worse* (890 vs 674), because it flips 2 state bits per transition while
+  binary flips ~1.5 on average (276 vs. 376 bit flips over the same
+  188 state changes). But RTL only sees named signals. At gate level,
+  binary's 33-gate decode/encode logic churns on every cycle, and **one-hot
+  switches half as much (1568 vs 3086)**. **Measure power at gate level, not RTL.**
+- **…but one-hot pays on the clock.** 7 flops vs. 3 means 2.3× the clock-pin
+  toggles. Data toggles favor one-hot by 2×, clock load favors binary by 2.3×,
+  and which one wins overall depends on capacitance per net vs. per clock pin —
+  which needs a real cell library (see next experiments).
+- **Lower bound.** The gate-level sim is zero-delay, so it has no glitches.
+  With real gate delays, binary's deeper logic (depth 7 vs. 5) would glitch
+  more, widening one-hot's lead on data toggles.
+
+---
+
 ## Bugs found along the way
 
 - **Bare `enum` is 32 bits (both v1 designs).** `typedef enum {A, B}` has no base
@@ -113,8 +167,8 @@ All results: Yosys 0.58 generic `synth`, Icarus 12.
 
 ## Next experiments
 
-- [ ] Measure toggle counts from the VCDs to put numbers on the power claims
-      (two-state FSM measured once: state bit toggles 102 binary vs. 204 one-hot).
+- [ ] Turn toggles into µW: sky130 liberty + OpenSTA `read_vcd` / `report_power`,
+      to settle data-toggle vs. clock-load for the pattern detector.
 - [ ] Map to a real liberty file (e.g. sky130) with `dfflibmap` + `abc -liberty`
       to compare area in µm² instead of generic cell count — especially for the
       pattern detector, where v2 trades 4 extra flops for fewer gates.
