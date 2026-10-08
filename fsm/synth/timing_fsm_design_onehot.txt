@@ -1,4 +1,89 @@
 
+######################## corner ss_100C_1v60 ########################
+period 10 ns, uncertainty setup 0.1 / hold 0.05 ns
+
+=================== constraint check ===================
+
+=================== critical path (setup) ===================
+Startpoint: _2_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: _2_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+     Cap     Slew    Delay     Time   Description
+---------------------------------------------------------------------------
+            0.000    0.000    0.000   clock clk (rise edge)
+                     0.000    0.000   clock network delay (ideal)
+            0.000    0.000    0.000 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
+   0.004    0.085    0.708    0.708 v _2_/Q (sky130_fd_sc_hd__dfrtp_1)
+            0.085    0.002    0.710 v _0_/A1 (sky130_fd_sc_hd__mux2_1)
+   0.002    0.105    0.644    1.354 v _0_/X (sky130_fd_sc_hd__mux2_1)
+            0.105    0.004    1.358 v _2_/D (sky130_fd_sc_hd__dfrtp_1)
+                              1.358   data arrival time
+
+            0.000   10.000   10.000   clock clk (rise edge)
+                     0.000   10.000   clock network delay (ideal)
+                    -0.100    9.900   clock uncertainty
+                     0.000    9.900   clock reconvergence pessimism
+                              9.900 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
+                    -0.310    9.590   library setup time
+                              9.590   data required time
+---------------------------------------------------------------------------
+                              9.590   data required time
+                             -1.358   data arrival time
+---------------------------------------------------------------------------
+                              8.232   slack (MET)
+
+
+
+=================== critical path (hold) ===================
+Startpoint: in (input port clocked by clk)
+Endpoint: _3_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: min
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 ^ input external delay
+   0.101    0.101 ^ in (in)
+   0.273    0.373 ^ _1_/X (sky130_fd_sc_hd__mux2_1)
+   0.005    0.378 ^ _3_/D (sky130_fd_sc_hd__dfstp_2)
+            0.378   data arrival time
+
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.050    0.050   clock uncertainty
+   0.000    0.050   clock reconvergence pessimism
+            0.050 ^ _3_/CLK (sky130_fd_sc_hd__dfstp_2)
+  -0.075   -0.025   library hold time
+           -0.025   data required time
+-----------------------------------------------------------
+           -0.025   data required time
+           -0.378   data arrival time
+-----------------------------------------------------------
+            0.403   slack (MET)
+
+
+
+=================== design rule violations ===================
+
+=================== timing summary ===================
+clk period_min = 1.77 fmax = 565.62
+
+=================== closure ===================
+setup WNS   8.232 ns  TNS   0.000 ns
+hold  WNS   0.403 ns  TNS   0.000 ns
+design rule violations: 0
+constraints complete:   yes
+CLOSURE ss_100C_1v60   PASS                         setup   8.232  hold   0.403  ns
+
+######################## corner tt_025C_1v80 ########################
+period 10 ns, uncertainty setup 0.1 / hold 0.05 ns
+
+=================== constraint check ===================
+
 =================== critical path (setup) ===================
 Startpoint: _2_ (rising edge-triggered flip-flop clocked by clk)
 Endpoint: _2_ (rising edge-triggered flip-flop clocked by clk)
@@ -18,19 +103,20 @@ Path Type: max
 
             0.000   10.000   10.000   clock clk (rise edge)
                      0.000   10.000   clock network delay (ideal)
-                     0.000   10.000   clock reconvergence pessimism
-                             10.000 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
-                    -0.128    9.872   library setup time
-                              9.872   data required time
+                    -0.100    9.900   clock uncertainty
+                     0.000    9.900   clock reconvergence pessimism
+                              9.900 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
+                    -0.128    9.772   library setup time
+                              9.772   data required time
 ---------------------------------------------------------------------------
-                              9.872   data required time
+                              9.772   data required time
                              -0.630   data arrival time
 ---------------------------------------------------------------------------
-                              9.242   slack (MET)
+                              9.142   slack (MET)
 
 
 
-=================== hold check ===================
+=================== critical path (hold) ===================
 Startpoint: in (input port clocked by clk)
 Endpoint: _2_ (rising edge-triggered flip-flop clocked by clk)
 Path Group: clk
@@ -48,22 +134,23 @@ Path Type: min
 
    0.000    0.000   clock clk (rise edge)
    0.000    0.000   clock network delay (ideal)
-   0.000    0.000   clock reconvergence pessimism
-            0.000 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
-  -0.040   -0.040   library hold time
-           -0.040   data required time
+   0.050    0.050   clock uncertainty
+   0.000    0.050   clock reconvergence pessimism
+            0.050 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
+  -0.040    0.010   library hold time
+            0.010   data required time
 -----------------------------------------------------------
-           -0.040   data required time
+            0.010   data required time
            -0.204   data arrival time
 -----------------------------------------------------------
-            0.244   slack (MET)
+            0.194   slack (MET)
 
 
+
+=================== design rule violations ===================
 
 =================== timing summary ===================
-wns 0.000
-tns 0.000
-clk period_min = 0.76 fmax = 1318.70
+clk period_min = 0.86 fmax = 1165.06
 
 =================== power: with switching activity ===================
 switching activity: measured, from build/act_fsm_design_onehot.tcl
@@ -89,3 +176,90 @@ Pad                  0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
 ------------------------------------------------------------------------
 Total                8.218140e-06 0.000000e+00 2.468197e-11 8.218164e-06 100.0%
                            100.0%         0.0%         0.0%
+
+=================== closure ===================
+setup WNS   9.142 ns  TNS   0.000 ns
+hold  WNS   0.194 ns  TNS   0.000 ns
+design rule violations: 0
+constraints complete:   yes
+CLOSURE tt_025C_1v80   PASS                         setup   9.142  hold   0.194  ns
+
+######################## corner ff_n40C_1v95 ########################
+period 10 ns, uncertainty setup 0.1 / hold 0.05 ns
+
+=================== constraint check ===================
+
+=================== critical path (setup) ===================
+Startpoint: _2_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: _2_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+     Cap     Slew    Delay     Time   Description
+---------------------------------------------------------------------------
+            0.000    0.000    0.000   clock clk (rise edge)
+                     0.000    0.000   clock network delay (ideal)
+            0.000    0.000    0.000 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
+   0.004    0.032    0.216    0.216 v _2_/Q (sky130_fd_sc_hd__dfrtp_1)
+            0.032    0.003    0.218 v _0_/A1 (sky130_fd_sc_hd__mux2_1)
+   0.002    0.038    0.144    0.362 v _0_/X (sky130_fd_sc_hd__mux2_1)
+            0.038    0.004    0.366 v _2_/D (sky130_fd_sc_hd__dfrtp_1)
+                              0.366   data arrival time
+
+            0.000   10.000   10.000   clock clk (rise edge)
+                     0.000   10.000   clock network delay (ideal)
+                    -0.100    9.900   clock uncertainty
+                     0.000    9.900   clock reconvergence pessimism
+                              9.900 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
+                    -0.078    9.822   library setup time
+                              9.822   data required time
+---------------------------------------------------------------------------
+                              9.822   data required time
+                             -0.366   data arrival time
+---------------------------------------------------------------------------
+                              9.456   slack (MET)
+
+
+
+=================== critical path (hold) ===================
+Startpoint: in (input port clocked by clk)
+Endpoint: _2_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: min
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 ^ input external delay
+   0.050    0.050 ^ in (in)
+   0.085    0.135 ^ _0_/X (sky130_fd_sc_hd__mux2_1)
+   0.004    0.139 ^ _2_/D (sky130_fd_sc_hd__dfrtp_1)
+            0.139   data arrival time
+
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.050    0.050   clock uncertainty
+   0.000    0.050   clock reconvergence pessimism
+            0.050 ^ _2_/CLK (sky130_fd_sc_hd__dfrtp_1)
+  -0.020    0.030   library hold time
+            0.030   data required time
+-----------------------------------------------------------
+            0.030   data required time
+           -0.139   data arrival time
+-----------------------------------------------------------
+            0.110   slack (MET)
+
+
+
+=================== design rule violations ===================
+
+=================== timing summary ===================
+clk period_min = 0.54 fmax = 1839.31
+
+=================== closure ===================
+setup WNS   9.456 ns  TNS   0.000 ns
+hold  WNS   0.110 ns  TNS   0.000 ns
+design rule violations: 0
+constraints complete:   yes
+CLOSURE ff_n40C_1v95   PASS                         setup   9.456  hold   0.110  ns

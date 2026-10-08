@@ -5,7 +5,7 @@
 #   make equiv     - formally check each v1 == its one-hot v2 (Yosys miter + SAT)
 #   make gls       - gate-level sim: run each TB against its Yosys netlist
 #   make toggles   - count signal toggles (RTL + gate-level) as a power proxy
-#   make timing    - map to sky130, run OpenSTA: real area, timing and power
+#   make timing    - map to sky130, run OpenSTA at ss/tt/ff: area, timing, power, closure
 #   make lint      - Verilator lint (needs verilator on PATH)
 #   make clean
 # Single targets also work, e.g. make sim-pattern_detector_onehot
@@ -25,16 +25,26 @@ EQUIV_DEPTH := 25
 BUILD    := build
 TOGGLES  := python ../scripts/vcd_toggles.py
 
-# sky130 high-density standard cells, typical corner (25 C, 1.8 V)
-LIB_NAME := sky130_fd_sc_hd__tt_025C_1v80.lib
-LIB_URL  := https://raw.githubusercontent.com/The-OpenROAD-Project/OpenROAD-flow-scripts/master/flow/platforms/sky130hd/lib/$(LIB_NAME)
-LIB      := ../lib/$(LIB_NAME)
+# sky130 high-density standard cells. Map at the typical corner, then check
+# timing at all three: slow (worst for setup), typical, fast (worst for hold).
+LIB_DIR  := ../lib
+LIB_URL  := https://raw.githubusercontent.com/efabless/skywater-pdk-libs-sky130_fd_sc_hd/master/timing
+CORNERS  := ss_100C_1v60 tt_025C_1v80 ff_n40C_1v95
+MAP_CORNER := tt_025C_1v80
+lib_for   = $(LIB_DIR)/sky130_fd_sc_hd__$(1).lib
+LIB_NAME := sky130_fd_sc_hd__$(MAP_CORNER).lib
 # Low-power isolation/retention cells are for power-gated designs; real flows mark them dont_use
 DONT_USE := -dont_use *lpflow*
 # Clock period for STA and power, in ns (10 ns = 100 MHz)
 PERIOD   := 10
+# Clock uncertainty in ns: stands in for clock-tree skew + jitter before a
+# clock tree exists. Setup loses it from the period; hold must beat it.
+SETUP_UNCERTAINTY := 0.1
+HOLD_UNCERTAINTY  := 0.05
 # OpenSTA runs under WSL on Windows, natively elsewhere (see scripts/sta.sh)
-STA      := $(if $(shell command -v wsl.exe 2>/dev/null),wsl.exe -d Ubuntu -- bash,bash) ../scripts/sta.sh
+STA      := $(if $(shell command -v wsl.exe 2>/dev/null),wsl.exe -d Ubuntu --) \
+            env SETUP_UNCERTAINTY=$(SETUP_UNCERTAINTY) HOLD_UNCERTAINTY=$(HOLD_UNCERTAINTY) \
+            bash ../scripts/sta.sh
 
 # Use native yosys if installed, otherwise the YoWASP build (pip install yowasp-yosys).
 # Note: YoWASP can only see files under the current directory, so keep paths relative.
@@ -110,12 +120,12 @@ toggles-%: sim-% gls-%
 	@echo "== $*"; grep -E "^###|internal toggles|cycles" synth/toggles_$*.txt
 
 # ---------------- sky130 mapping + OpenSTA ----------------
-$(LIB):
+$(LIB_DIR)/%.lib:
 	mkdir -p $(dir $@)
-	curl -sSfL -o $@ $(LIB_URL)
+	curl -sSfL -o $@ $(LIB_URL)/$*.lib
 
 # Yosys runs from the repo root so YoWASP can see both fsm/ and lib/
-map-%: rtl/%.sv $(LIB) | $(BUILD)
+map-%: rtl/%.sv $(call lib_for,$(MAP_CORNER)) | $(BUILD)
 	cd .. && $(YOSYS) -q -l fsm/$(BUILD)/map_$*.log -p "\
 	  read_verilog -sv fsm/$<; \
 	  synth -top $*; \
@@ -125,15 +135,25 @@ map-%: rtl/%.sv $(LIB) | $(BUILD)
 	  tee -q -o fsm/synth/area_$*.txt stat -liberty lib/$(LIB_NAME); \
 	  write_verilog -noattr -noexpr -nohex -nodec fsm/$(BUILD)/sky130_$*.v"
 
-# Power uses the input activity measured in the RTL simulation
+# One report per variant with a section per corner, each ending in a
+# CLOSURE PASS/FAIL line. Power (from the input activity measured in the RTL
+# sim) is reported at the mapping corner only.
 timing: $(addprefix timing-,$(VARIANTS))
+	@echo; echo "== timing closure at $(PERIOD) ns"
+	@for v in $(VARIANTS); do \
+	  grep "^CLOSURE" synth/timing_$$v.txt | sed "s/^CLOSURE/  $$v:/"; \
+	done
 
-timing-%: map-% sim-%
+timing-%: map-% sim-% $(foreach c,$(CORNERS),$(call lib_for,$(c)))
 	@$(TOGGLES) $(BUILD)/$*.vcd --summary-only --sta-activity $(BUILD)/act_$*.tcl > /dev/null
-	$(STA) $(LIB) $(BUILD)/sky130_$*.v $* $(PERIOD) $(BUILD)/act_$*.tcl > synth/timing_$*.txt
-	@echo "== $*"
-	@grep -E "Chip area" synth/area_$*.txt
-	@grep -E "period_min|^Total" synth/timing_$*.txt
+	@rm -f synth/timing_$*.txt
+	@for c in $(CORNERS); do \
+	  act=""; [ $$c = $(MAP_CORNER) ] && act=$(BUILD)/act_$*.tcl; \
+	  $(STA) $(call lib_for,$$c) $(BUILD)/sky130_$*.v $* $(PERIOD) $$c $$act \
+	    >> synth/timing_$*.txt || exit 1; \
+	done
+	@echo "== $*  ($$(grep -o "Chip area.*" synth/area_$*.txt))"
+	@grep -E "^CLOSURE|period_min" synth/timing_$*.txt
 
 # ---------------- lint ----------------
 lint:

@@ -102,19 +102,9 @@ Results: Yosys 0.58, Icarus 12; sky130 HD typical corner and OpenSTA 2.3.1 for s
 
 ### How it's measured
 
-Dynamic power ≈ α·C·V²·f. V and f are the same for both variants, so the
-comparison comes down to **how often each net switches (α)** and **how much
-capacitance switches (C)**. `make toggles` measures α:
-
-1. The TB dumps a VCD: every value change of every signal, with timestamps.
-2. `make gls` re-runs the **same TB against the Yosys netlist**, so the VCD also
-   contains every internal gate output (`_08_`, `_17_`, …), not just the
-   signals named in the RTL.
-3. [`scripts/vcd_toggles.py`](../scripts/vcd_toggles.py) counts per-bit 0↔1
-   transitions for every net in the `dut` scope (ignoring the initial value and
-   x/z), and separates clock, inputs and internal nets.
-4. Both variants get identical stimulus (same TB, same seed) — confirmed by
-   identical `in` and `clk` toggle counts.
+General methodology: [Switching activity](../README.md#switching-activity) in
+the root README. Both variants run the same TB with the same seed — confirmed
+by identical `in` and `clk` toggle counts.
 
 ### Results
 
@@ -154,42 +144,35 @@ its data doesn't).
 
 ### How it's done
 
-`make timing` (needs WSL + OpenSTA, see [Setup](#setup-for-make-timing)):
+General flow: [Sky130 timing flow](../README.md#sky130-timing-flow) and
+[Setup](../README.md#setup-for-make-timing) in the root README.
 
-1. **Map to real cells.** Yosys `dfflibmap` + `abc -liberty` map each variant
-   onto the SkyWater sky130 HD standard cells (typical corner, 25 °C, 1.8 V)
-   and write a cell-level netlist. `stat -liberty` gives area in µm².
-   Low-power `lpflow_*` cells are excluded (`dont_use`), as in real flows.
-2. **Static timing analysis.** OpenSTA ([`scripts/sta.tcl`](../scripts/sta.tcl))
-   times every flop-to-flop path using the library's delay tables: clk→Q of the
-   launching flop + logic + setup of the capturing flop. Inputs driven by a
-   `buf_1`, 5 fF output load, ideal clock, no wires (pre-placement). The async
-   reset is a false path.
-3. **Power** at a 10 ns clock (100 MHz). The **measured** activity of `in` from
-   the RTL sim (0.51 toggles/cycle) is fed to OpenSTA, which propagates it
-   through the logic and flops. Reported twice: with that activity, and with
-   all data held still (**clock only**: the clock toggling the flops'
-   internal clock circuitry, paid every cycle regardless of data).
-
-Reports: `synth/area_*.txt`, `synth/timing_*.txt`.
+FSM-specific parameters:
+- **Input activity** (`in`): 0.51 toggles/cycle, measured from the RTL VCD and
+  fed to OpenSTA for power propagation.
+- **Async reset** is declared a false path (releasing reset at a clock edge is
+  not a real operating condition).
 
 ### Results
 
-| | Area (µm²) | Flop area | Min period (ns) | fmax (MHz) | Power (µW) | Clock-only (µW) | Data-dependent (µW) |
-|---|---|---|---|---|---|---|---|
-| `fsm_design` (binary) | **35.0** | 75% | **0.71** | **1399** | **7.8** | 4.1 | 3.7 |
-| `fsm_design_onehot` | 73.8 | 70% | 0.76 | 1319 | 14.1 | 8.2 | 5.9 |
-| `pattern_detector` (binary) | **148.9** | 50% | 1.01 | 990 | **22.4** | 12.4 | 10.0 |
-| `pattern_detector_onehot` | 232.7 | 76% | **0.92** | **1084** | 42.0 | 28.8 | 13.2 |
+Min period includes the 0.1 ns setup uncertainty. The slow corner sets the
+real limit; power is at the typical corner.
 
-Critical paths (setup):
+| | Area (µm²) | Flop area | Min period tt (ns) | **Min period ss (ns)** | Power (µW) | Clock-only (µW) | Data-dependent (µW) |
+|---|---|---|---|---|---|---|---|
+| `fsm_design` (binary) | **35.0** | 75% | **0.81** | **1.62** | **7.8** | 4.1 | 3.7 |
+| `fsm_design_onehot` | 73.8 | 70% | 0.86 | 1.77 | 14.1 | 8.2 | 5.9 |
+| `pattern_detector` (binary) | **148.9** | 50% | 1.11 | 2.12 | **22.4** | 12.4 | 10.0 |
+| `pattern_detector_onehot` | 232.7 | 76% | **1.02** | **1.99** | 42.0 | 28.8 | 13.2 |
+
+Critical paths (setup, typical corner, before uncertainty):
 
 - `pattern_detector`: clk→Q 0.405 → `nor4b` 0.387 → `a31o` 0.141 → setup 0.067 = **1.01 ns**
 - `pattern_detector_onehot`: clk→Q 0.373 → `o41a` 0.412 → setup 0.130 = **0.92 ns**
 
 ### Observations
 
-- **Pattern detector: one-hot is 9% faster, but 56% larger and uses 88% more
+- **Pattern detector: one-hot is 6–8% faster, but 56% larger and uses 88% more
   power.** The generic-gate results (section 2: one-hot 42% *smaller*) were
   wrong on area, because they count a flop like any other gate. A sky130 flop
   (`dfrtp_1`, 25 µm²) is the size of 4–7 simple gates, and flops are 76% of
@@ -201,7 +184,7 @@ Critical paths (setup):
   close to paying for its extra clock load.
 - **The flop is a big part of the critical path.** clk→Q alone is ~0.4 ns,
   40% of binary's path. Generic logic depth (7 vs. 5) ignores it, and
-  overstates one-hot's speed advantage (real: 9%).
+  overstates one-hot's speed advantage (real: 8% at typical, 6% at slow).
 - **Real cells flatten logic depth.** Generic depth 7 vs. 5 becomes 2 cells vs.
   1 cell: one-hot's whole 5-input `IDLE` equation is a single `o41a`
   (4-input OR into an AND) cell.
@@ -212,31 +195,35 @@ Critical paths (setup):
   input delay 0 implies, is too close to the edge. Real designs release reset
   through a reset synchronizer.
 
+### Timing closure
+
+General definition, checks, and corners: [Timing closure](../README.md#timing-closure)
+in the root README.
+
+**Result at 10 ns: all four variants PASS at all three corners.** Worst margins:
+
+| | worst setup slack | at | worst hold slack | at |
+|---|---|---|---|---|
+| `fsm_design` | 8.380 ns | ss | 0.038 ns | ff |
+| `fsm_design_onehot` | 8.232 ns | ss | 0.110 ns | ff |
+| `pattern_detector` | 7.881 ns | ss | 0.118 ns | ff |
+| `pattern_detector_onehot` | 8.012 ns | ss | 0.089 ns | ff |
+
+- **Setup is easy at 10 ns, hold is the tight one.** `fsm_design`'s path from
+  `in` through one `xnor2` leaves just 38 ps of hold margin at the fast corner.
+- Both failure modes verified: at 1.2 ns the pattern detector passes typical
+  (+0.09 ns) but fails slow (−0.92 ns); with hold uncertainty raised to 0.1 ns,
+  `fsm_design` fails hold at fast (−0.012 ns). Use
+  `make timing-<variant> PERIOD=... HOLD_UNCERTAINTY=...` to reproduce.
+
 ### Caveats
 
-- **Power is vectorless beyond the inputs.** OpenSTA 2.3 can't read a VCD, and
-  ignores activity set on flop outputs, so internal activity is estimated by
-  propagating `in`'s probability through the logic. That assumes signals are
-  independent, which one-hot states are not (exactly one bit is 1), so the
-  combinational part is approximate (binary 6.1 µW vs. one-hot 5.8 µW, where
-  gate-level toggles suggest a bigger gap). The clock-only part doesn't depend
-  on activity and is the reliable number.
-- **Pre-layout.** No wire capacitance and an ideal clock (no clock tree
-  buffers, which would add more clock power per flop).
-- **Typical corner only.** Sign-off would also check slow (`ss`) and fast
-  (`ff`) corners.
-
-### Setup for `make timing`
-
-- The liberty file is downloaded to `lib/` on first use (gitignored, 12.8 MB).
-- OpenSTA comes with OpenROAD from the litex-hub conda channel, installed in
-  WSL Ubuntu with [micromamba](https://mamba.readthedocs.io) (no sudo):
-  ```sh
-  curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xj -C ~/.local bin/micromamba
-  MAMBA_ROOT_PREFIX=~/micromamba ~/.local/bin/micromamba create -n eda -c litex-hub -c conda-forge openroad
-  ```
-  [`scripts/sta.sh`](../scripts/sta.sh) runs `~/micromamba/envs/eda/bin/sta`
-  (OpenSTA 2.3.1); override with `STA_BIN=...`.
+General caveats: [Caveats](../README.md#caveats-pre-layout-timing-and-power)
+in the root README. FSM-specific note: the one-hot state bits are mutually
+exclusive (exactly one is 1), violating the signal-independence assumption in
+OpenSTA's power propagation, so the combinational power estimate is approximate
+(binary 6.1 µW vs. one-hot 5.8 µW where gate-level toggles suggest a bigger
+gap). The clock-only numbers are reliable.
 
 ---
 
@@ -259,12 +246,11 @@ Critical paths (setup):
 
 ## Next experiments
 
-- [x] Map to sky130 and compare area in µm², timing and power — see section 4.
 - [ ] Power from a full VCD: simulate the sky130 netlist and use a newer OpenSTA
       (`read_vcd`) so internal activity is measured, not estimated.
 - [ ] Clock gating / enable flops: the clock is most of the power, so try
       holding state with an enable when `in` doesn't change it.
-- [ ] Check slow and fast corners (`ss_100C_1v60`, `ff_n40C_1v95`).
+- [ ] Place and route with OpenROAD and re-time with real wires and a clock tree.
 - [ ] Try Yosys `(* fsm_encoding = "one-hot" *)` on the enum and compare with the hand-coded v2.
 - [ ] One-hot with an all-zeros `IDLE` ("one-hot-zero"): saves a flop in the pattern detector.
 - [ ] Add illegal-state recovery to the one-hot variants and measure the cost.
