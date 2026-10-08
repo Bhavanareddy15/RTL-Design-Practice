@@ -9,9 +9,11 @@ module tb_encoder;
 
     int errors = 0;
 
-    // Waveform dump
+    // Waveform dump — path overridable with +vcd=<path>
+    string vcd_path;
     initial begin
-        $dumpfile("tb_encoder.vcd");
+        if (!$value$plusargs("vcd=%s", vcd_path)) vcd_path = "tb_encoder.vcd";
+        $dumpfile(vcd_path);
         $dumpvars(0, tb_encoder);
     end
 
