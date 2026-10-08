@@ -30,8 +30,8 @@ save **area** and **power**.
 | Module | Directory | Sim | Synth | Formal | Notes |
 |--------|-----------|-----|-------|--------|-------|
 | Encoder | [encoder/](encoder/) | ✅ | ⬜ | ⬜ | |
-| FSM (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | equiv check; one-hot costs 2× cells — see [NOTES](fsm/NOTES.md) |
-| Pattern detector (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | sky130: one-hot 6–8% faster but 56% larger, 88% more power; timing closed at 10 ns (ss/tt/ff) — see [NOTES](fsm/NOTES.md) |
+| FSM (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | equiv check; one-hot costs 2× cells — see [README](fsm/README.md) |
+| Pattern detector (v1 binary, v2 one-hot) | [fsm/](fsm/) | ✅ | ✅ | ✅ | sky130: one-hot 6–8% faster but 56% larger, 88% more power; timing closed at 10 ns (ss/tt/ff) — see [README](fsm/README.md) |
 | Shift register | [shift_register/](shift_register/) | ✅ | ⬜ | ⬜ | |
 | Prepend packet | [prepend_packet/](prepend_packet/) | ✅ | ✅ | ⬜ | |
 | Fixed-priority arbiter | [arbiters/](arbiters/) | ✅ | ⬜ | ⬜ | |
