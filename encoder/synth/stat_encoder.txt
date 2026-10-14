@@ -1,0 +1,28 @@
+
+3. Printing statistics.
+
+=== encoder ===
+
+        +----------Local Count, excluding submodules.
+        | 
+       20 wires
+       60 wire bits
+        4 public wires
+       44 public wire bits
+        3 ports
+       12 port bits
+       20 cells
+        4   $_ANDNOT_
+        2   $_NOR_
+       14   $_OR_
+
+4. Executing LTP pass (find longest path).
+
+Longest topological path in encoder (length=6):
+    0: \inp [2]
+    1: $abc$129$new_n20 (via $abc$129$auto$blifparse.cc:397:parse_blif$137)
+    2: $abc$129$new_n21 (via $abc$129$auto$blifparse.cc:397:parse_blif$138)
+    3: $abc$129$new_n22 (via $abc$129$auto$blifparse.cc:397:parse_blif$139)
+    4: $abc$129$new_n23 (via $abc$129$auto$blifparse.cc:397:parse_blif$140)
+    5: $abc$129$new_n24 (via $abc$129$auto$blifparse.cc:397:parse_blif$141)
+    6: \binary [0] (via $abc$129$auto$blifparse.cc:397:parse_blif$142)

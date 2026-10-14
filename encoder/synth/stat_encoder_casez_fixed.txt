@@ -1,0 +1,31 @@
+
+3. Printing statistics.
+
+=== encoder_casez_fixed ===
+
+        +----------Local Count, excluding submodules.
+        | 
+       38 wires
+       47 wire bits
+        3 public wires
+       12 public wire bits
+        3 ports
+       12 port bits
+       39 cells
+       12   $_ANDNOT_
+        1   $_AND_
+        3   $_NOR_
+        4   $_ORNOT_
+       19   $_OR_
+
+4. Executing LTP pass (find longest path).
+
+Longest topological path in encoder_casez_fixed (length=7):
+    0: \inp [6]
+    1: $abc$280$new_n23 (via $abc$280$auto$blifparse.cc:397:parse_blif$291)
+    2: $abc$280$new_n27 (via $abc$280$auto$blifparse.cc:397:parse_blif$295)
+    3: $abc$280$new_n28 (via $abc$280$auto$blifparse.cc:397:parse_blif$296)
+    4: $abc$280$new_n39 (via $abc$280$auto$blifparse.cc:397:parse_blif$307)
+    5: $abc$280$new_n40 (via $abc$280$auto$blifparse.cc:397:parse_blif$308)
+    6: $abc$280$new_n45 (via $abc$280$auto$blifparse.cc:397:parse_blif$313)
+    7: \binary [2] (via $abc$280$auto$blifparse.cc:397:parse_blif$320)
